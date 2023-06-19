@@ -1,23 +1,30 @@
 package com.sparta.springauth.service;
 
+import com.sparta.springauth.dto.LoginRequestDto;
 import com.sparta.springauth.dto.SignupRequestDto;
 import com.sparta.springauth.entity.User;
 import com.sparta.springauth.entity.UserRoleEnum;
+import com.sparta.springauth.jwt.JwtUtil;
 import com.sparta.springauth.repository.UserRepository;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
 @Service
+//@RequiredArgsConstructor // 생성자 만들지 않고 사용할 수 있다.
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    private  final JwtUtil jwtUtil;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
 
     // ADMIN_TOKEN : 일반 사용자인지 관리자인지 구분하기 위해
@@ -30,7 +37,7 @@ public class UserService {
         // 암호화 처리
         String password = passwordEncoder.encode(requestDto.getPassword());
 
-        // 회원 중복 확인
+        // 회원 중복 확인 -> 있을 때 error 처리
         // Optional : null 체크하기 위해 만들어진 타입
         Optional<User> checkUsername = userRepository.findByUsername(username);
         // isPresent() : Optional 내부에 존재하는 메서드, Optional 에 넣어준 값이 존재하는지 존재하지 않는지 확인해주는 메서드
@@ -62,5 +69,28 @@ public class UserService {
         User user = new User(username, password, email, role);
         // userRepository 에 의해 저장이 완료딤
         userRepository.save(user);
+    }
+
+    public void login(LoginRequestDto requestDto, HttpServletResponse res) {
+        String username = requestDto.getUsername();
+        String password = requestDto.getPassword();
+
+        // 사용자 확인 -> 없으면 error 처리
+        // optional 객체에서 orElseThrow 메소드 사용해서 바로 User 객체로 반환되도록
+        User user = userRepository.findByUsername(username).orElseThrow(
+                () -> new IllegalArgumentException("등록된 사용자가 없습니다.")
+        );
+
+        // 비밀번호 확인
+        // matches(평문(입력받아온 평문 데이터, 암호화 돼서 저장된 password)
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        // JWT 생성
+        String token = jwtUtil.createToken(user.getUsername(), user.getRole());
+        // 쿠키에 저장 후 Response 객체에 추가
+        // (받아온 HttpServletResponse 객체도 전달)
+        jwtUtil.addJwtToCookie(token, res);
     }
 }
