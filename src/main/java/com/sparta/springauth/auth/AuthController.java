@@ -1,5 +1,8 @@
 package com.sparta.springauth.auth;
 
+import com.sparta.springauth.entity.UserRoleEnum;
+import com.sparta.springauth.jwt.JwtUtil;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,10 +16,17 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
 @RestController
+//@RequiredArgsConstructor : JwtUtil 받아오기 위해 사용할 수 있음
 @RequestMapping("/api")
 public class AuthController {
-
     public static final String AUTHORIZATION_HEADER = "Authorization";
+
+    private final JwtUtil jwtUtil;
+
+    // 생성자 주입으로 JwtUtil 받아오기
+    public AuthController(JwtUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
+    }
 
     @GetMapping("/create-cookie")
     public String createCookie(HttpServletResponse res) {
@@ -56,12 +66,48 @@ public class AuthController {
         // getSession(false) : 세션이 존재할 경우 세션 반환, 없을 경우 null 반환
         HttpSession session = req.getSession(false);
 
-        // 가져온 세션에 저장된 Value 를 Name 을 사용하여 가져온다.
+        // 가져온 세션에 저장된 Value 를 Name 을 사용하여 가져온다.합
         // getAttribute 가 Object 로 반환을 해서 (String) 으로 캐스팅
         String value = (String) session.getAttribute(AUTHORIZATION_HEADER);
         System.out.println("value = " + value);
 
         return "getSession : " + value;
+    }
+
+    @GetMapping("/create-jwt")
+    public String createJwt(HttpServletResponse res) {
+        // Jwt 생성
+        String token = jwtUtil.createToken("Robbie", UserRoleEnum.USER);
+
+        // Jwt 쿠키 저장
+        jwtUtil.addJwtToCookie(token, res);
+
+        return "createJwt : " + token;
+    }
+
+    @GetMapping("/get-jwt")
+    // @CookieValue 에 Authorization 값 주고 변수 이름은 tokenValue
+    public String getJwt(@CookieValue(JwtUtil.AUTHORIZATION_HEADER) String tokenValue) {
+        // JWT 토큰 substring(가져온 Token 에 Bearer 이 붙어 있기 때문에 잘라줌)
+        String token = jwtUtil.substringToken(tokenValue);
+
+        // 토큰 검증
+        if(!jwtUtil.validateToken(token)){
+            throw new IllegalArgumentException("Token Error");
+        }
+
+        // 토큰에서 사용자 정보 가져오기
+        Claims info = jwtUtil.getUserInfoFromToken(token);
+        // 사용자 username
+        //
+        String username = info.getSubject();
+        System.out.println("username = " + username);
+        // 사용자 권한
+        // get() 에 만들 때 넣어줬던 값을 넣어주면 권한 값도 확인할 수 있다.
+        String authority = (String) info.get(JwtUtil.AUTHORIZATION_KEY);
+        System.out.println("authority = " + authority);
+
+        return "getJwt : " + username + ", " + authority;
     }
 
     // 쿠키 저장 메서드
