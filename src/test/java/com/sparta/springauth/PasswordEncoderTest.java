@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class PasswordEncoderTest {
 
     @Autowired
+    // PasswordEncoder(인터페이스, 다형성의 원리, 타입만 이걸로 받아줌) BCryptPasswordEncoder 구현체가 passwordEncoder 로 들어옴
     PasswordEncoder passwordEncoder; // passwordEncoder bean으로 만들어줬으니 주입 받아 와서 사용
 
     @Test
