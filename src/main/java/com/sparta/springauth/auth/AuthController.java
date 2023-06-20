@@ -87,6 +87,7 @@ public class AuthController {
 
     @GetMapping("/get-jwt")
     // @CookieValue 에 Authorization 값 주고 변수 이름은 tokenValue
+    // 손쉽게 Cookie 에 들어있는 Value 값을 가지고 올 수 있다.
     public String getJwt(@CookieValue(JwtUtil.AUTHORIZATION_HEADER) String tokenValue) {
         // JWT 토큰 substring(가져온 Token 에 Bearer 이 붙어 있기 때문에 잘라줌)
         String token = jwtUtil.substringToken(tokenValue);
