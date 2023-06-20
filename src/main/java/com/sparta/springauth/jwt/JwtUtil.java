@@ -118,7 +118,8 @@ public class JwtUtil {
     }
 
     // HttpServletRequest 에서 Cookie Value : JWT 가져오기
-    public String getTokenFromRequest(HttpServletRequest req) {
+    // Cookie 에서 JWT 를 가지고 있는 Cookie 가지고 오는 코드
+    public String getTokenFro가mRequest(HttpServletRequest req) {
         Cookie[] cookies = req.getCookies();
         if(cookies != null) {
             for (Cookie cookie : cookies) {
