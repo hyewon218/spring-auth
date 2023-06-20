@@ -8,7 +8,6 @@ import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
@@ -17,7 +16,7 @@ import java.io.IOException;
 // DispatherServelet 보다 앞단, 최초에 받는 부분이어서 @Annotation 사용하지 못함
 // 직접 쿠키를 뽑아오는 메서드를 구현해야 한다.
 @Slf4j(topic = "AuthFilter")
-@Component
+//@Component
 @Order(2)
 public class AuthFilter implements Filter {
 
