@@ -1,7 +1,7 @@
 package com.sparta.springauth.dto;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,7 +12,8 @@ public class SignupRequestDto {
     private String username;
     @NotBlank
     private String password;
-    @Email
+    // 이메일 형식에 허용되는 문자를 모두 사용할 수 있다.
+    @Pattern(regexp = "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$")
     @NotBlank
     private String email;
     // admin 인지 아닌지 확인
